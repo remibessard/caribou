@@ -1,32 +1,36 @@
 project(Caribou.Python.Config)
 
 set(PYTHON_FILES
-    __init__.py
+    ${CMAKE_CURRENT_SOURCE_DIR}/__init__.py
 )
 
 set(PYTHON_TEST_FILES
 )
 
 set(HEADER_FILES
-    Caribou.h.in
+    ${CMAKE_CURRENT_SOURCE_DIR}/Caribou.h.in
 )
 
 set(SOURCE_FILES
-    Caribou.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Caribou.cpp
 )
 
-caribou_add_python_module(Caribou
-                          TARGET_NAME       ${PROJECT_NAME}
-                          TARGET_ALIAS      Caribou::Python.Config
-                          TARGET_DEPENDS    Caribou::Config
-                          COMPONENT_NAME    Python
-                          PACKAGE_NAME      Caribou
-                          DESTINATION       Caribou
-                          SOURCE_FILES      ${SOURCE_FILES}
-                          PUBLIC_HEADERS    ${HEADER_FILES}
-                          HEADER_SRC_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/../../.."
-                          HEADER_BUILD_PREFIX   "${CMAKE_BINARY_DIR}/include/Caribou/Python"
-                          HEADER_INSTALL_PREFIX "include/Caribou/Python"
-                          PYTHON_FILES      ${PYTHON_FILES}
+SP3_add_python_package(
+    SOURCE_DIRECTORY
+        ${CMAKE_CURRENT_SOURCE_DIR}
+    TARGET_DIRECTORY
+        Caribou
 )
 
+SP3_add_python_module(
+    TARGET       ${PROJECT_NAME}
+    TARGET_ALIAS Caribou::Python.Config
+    PACKAGE      Caribou
+    MODULE       Caribou
+    DESTINATION  Caribou
+    SOURCES      ${SOURCE_FILES}
+    HEADERS      ${HEADER_FILES}
+    INCLUDE_SOURCE_DIR ""
+    INCLUDE_INSTALL_DIR "Caribou/Python"
+    DEPENDS      Caribou::Config
+)

@@ -52,20 +52,15 @@ if (VTK_VERSION VERSION_GREATER_EQUAL "8.90.0")
     )
 endif()
 
-# Add the target to the component of the same name. This will enable to do:
-# CMakeLists.txt
-#    find_package(Caribou COMPONENTS Topology)
-#    add_library(my_cool_library SHARED)
-#    target_link_libraries(my_cool_library PRIVATE Caribou::Topology)
-caribou_add_target_to_component (
-    TARGET_NAME    ${PROJECT_NAME}
+## Install rules for the library and headers; CMake package configurations files
+sofa_create_component_in_package_with_targets(
+    COMPONENT_VERSION ${CARIBOU_VERSION}
+    TARGETS ${PROJECT_NAME} AUTO_SET_TARGET_PROPERTIES
     COMPONENT_NAME ${PROJECT_NAME}
-    PACKAGE_NAME   Caribou
+    PACKAGE_NAME Caribou
     PUBLIC_HEADERS ${HEADER_FILES}
-)
-
-# This is required to be able to do "find_package(Caribou COMPONENTS Topology)"
-caribou_add_component_to_package (
-    COMPONENT_NAME ${PROJECT_NAME}
-    PACKAGE_NAME   Caribou
+    INCLUDE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../.."
+    INCLUDE_BUILD_DIR "${CMAKE_BINARY_DIR}/include/Caribou/Topology"
+    INCLUDE_INSTALL_DIR "Caribou/Topology"
+    RELOCATABLE "../../plugins"
 )

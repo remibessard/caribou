@@ -53,16 +53,6 @@ if (NOT WIN32)
     target_link_libraries(${PROJECT_NAME} PUBLIC pthread)
 endif()
 
-
-list(APPEND target_rpath
-    "$ORIGIN/../lib"
-    "$ORIGIN/../../../lib"
-    "@executable_path/../lib"
-    "@executable_path/../../../lib"
-)
-
-set_target_properties(${PROJECT_NAME} PROPERTIES INSTALL_RPATH "${target_rpath}" )
-
 target_link_libraries(${PROJECT_NAME} PUBLIC
                       $<$<AND:$<PLATFORM_ID:Linux>,$<VERSION_LESS:$<CXX_COMPILER_VERSION>,8.0>>:stdc++fs>
                       $<$<AND:$<PLATFORM_ID:Darwin>,$<VERSION_LESS:$<CXX_COMPILER_VERSION>,9.0>>:c++fs>)

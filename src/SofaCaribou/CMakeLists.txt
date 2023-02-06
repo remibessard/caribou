@@ -146,7 +146,12 @@ if (NOT TARGET Caribou::Algebra)
 endif()
 
 # Sofa's packages
-find_package(SOFA COMPONENTS SofaFramework SofaBaseLinearSolver SofaBaseTopology SofaEigen2Solver QUIET REQUIRED)
+find_package(Sofa.Framework QUIET)
+find_package(Sofa.LinearAlgebra COMPONENTS Direct Iterative QUIET)
+find_package(Sofa.Component.LinearSolver QUIET)
+find_package(Sofa.Component.Topology QUIET)
+
+#find_package(SOFA COMPONENTS SofaFramework SofaBaseLinearSolver SofaBaseTopology SofaEigen2Solver QUIET REQUIRED)
 
 # Optional packages
 find_package(Eigen3 QUIET REQUIRED)
@@ -165,10 +170,10 @@ target_link_libraries(${PROJECT_NAME} PUBLIC Eigen3::Eigen)
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
 set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
-list(APPEND target_rpath
-    "$ORIGIN/../lib"
-    "@executable_path/../lib"
-)
+#list(APPEND target_rpath
+#    "$ORIGIN/../lib"
+#    "@executable_path/../lib"
+#)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES INSTALL_RPATH "${target_rpath}" )
 
@@ -200,19 +205,25 @@ if (CARIBOU_WITH_OPENMP)
     target_compile_definitions(${PROJECT_NAME} PUBLIC CARIBOU_WITH_OPENMP)
 endif()
 
-set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX "_d")
+#set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX "_d")
 
-# Add the target to the component of the same name. This will enable to do:
-# CMakeLists.txt
-#    find_package(SofaCaribou)
-#    add_library(my_cool_plugin SHARED)
-#    target_link_libraries(my_cool_library PRIVATE SofaCaribou)
-caribou_add_target_to_component (
-    TARGET_NAME        ${PROJECT_NAME}
-    COMPONENT_NAME     SofaCaribou
-    PACKAGE_NAME       SofaCaribou
-    PUBLIC_HEADERS     "${TEMPLATE_FILES};${HEADER_FILES}"
+## Install rules for the library and headers; CMake package configurations files
+sofa_create_component_in_package_with_targets(
+    COMPONENT_VERSION ${CARIBOU_VERSION}
+    TARGETS ${PROJECT_NAME} AUTO_SET_TARGET_PROPERTIES
+    COMPONENT_NAME ${PROJECT_NAME}
+    PACKAGE_NAME ${PROJECT_NAME}
+    PUBLIC_HEADERS "${TEMPLATE_FILES};${HEADER_FILES}"
+    INCLUDE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/.."
+    INCLUDE_INSTALL_DIR "SofaCaribou"
     HEADER_SRC_PREFIX  "${CMAKE_CURRENT_SOURCE_DIR}/.."
+    RELOCATABLE "plugins"
+)
+
+sofa_create_package(
+    PACKAGE_NAME ${PROJECT_NAME}
+    PACKAGE_VERSION ${CARIBOU_VERSION}
+#    RELOCATABLE "include/${PROJECT_NAME}"
 )
 
 find_package(SofaPython3 QUIET)
@@ -227,8 +238,6 @@ install (
     COMPONENT headers
 )
 
-# This is required to be able to do "find_package(SofaCaribou)"
-caribou_create_package(SofaCaribou ${CARIBOU_VERSION})
 # Make the target relocatable
 set_target_properties(${PROJECT_NAME} PROPERTIES RELOCATABLE_INSTALL_DIR "plugins/SofaCaribou")
 set_target_properties(${PROJECT_NAME} PROPERTIES EXPORT_PROPERTIES "RELOCATABLE_INSTALL_DIR")

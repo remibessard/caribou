@@ -9,30 +9,33 @@ set(PYTHON_TEST_FILES
 )
 
 set(HEADER_FILES
-    Element.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Element.h
 )
 
 set(SOURCE_FILES
-    Geometry.cpp
-    Hexahedron.cpp
-    Quad.cpp
-    RectangularHexahedron.cpp
-    Segment.cpp
-    Tetrahedron.cpp
-    Triangle.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Geometry.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Hexahedron.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Quad.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/RectangularHexahedron.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Segment.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Tetrahedron.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Triangle.cpp
 )
 
-caribou_add_python_module(Geometry
-                          TARGET_NAME       ${PROJECT_NAME}
-                          TARGET_ALIAS      Caribou::Python.Geometry
-                          TARGET_DEPENDS    Caribou::Geometry Caribou::Python.Config
-                          COMPONENT_NAME    Python
-                          PACKAGE_NAME      Caribou
-                          DESTINATION       Caribou/Geometry
-                          SOURCE_FILES      ${SOURCE_FILES}
-                          PUBLIC_HEADERS    ${HEADER_FILES}
-                          HEADER_SRC_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/../../.."
-                          PYTHON_FILES      ${PYTHON_FILES}
-                          PYTHON_TEST_FILES ${PYTHON_TEST_FILES}
+SP3_add_python_package(
+    SOURCE_DIRECTORY
+        ${CMAKE_CURRENT_SOURCE_DIR}
+    TARGET_DIRECTORY
+        Caribou/Geometry
 )
 
+SP3_add_python_module(
+    TARGET       ${PROJECT_NAME}
+    TARGET_ALIAS Caribou::Python.Geometry
+    PACKAGE      Caribou
+    MODULE       Geometry
+    DESTINATION  Caribou/Geometry
+    SOURCES      ${SOURCE_FILES}
+    HEADERS      ${HEADER_FILES}
+    DEPENDS      Caribou::Geometry Caribou::Python.Config
+)

@@ -1,25 +1,25 @@
 project(Caribou.Python.Topology)
 
 set(PYTHON_FILES
-    __init__.py
+    ${CMAKE_CURRENT_SOURCE_DIR}/__init__.py
 )
 
 set(PYTHON_TEST_FILES
-    pytest/Caribou_Topology_Test.py
+    ${CMAKE_CURRENT_SOURCE_DIR}/pytest/Caribou_Topology_Test.py
 )
 
 set(HEADER_FILES
-    BarycentricContainer.h
-    Domain.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/BarycentricContainer.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Domain.h
 )
 
 set(SOURCE_FILES
-    Domain.cpp
-    Grid.cpp
-    HashGrid.cpp
-    Mesh.cpp
-    IO/IO.cpp
-    Topology.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Domain.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Grid.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/HashGrid.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Mesh.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/IO/IO.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Topology.cpp
 )
 
 if(CARIBOU_WITH_VTK)
@@ -30,18 +30,20 @@ if(CARIBOU_WITH_VTK)
     endif()
 endif()
 
+SP3_add_python_package(
+    SOURCE_DIRECTORY
+        ${CMAKE_CURRENT_SOURCE_DIR}
+    TARGET_DIRECTORY
+        Caribou/Topology
+)
 
-caribou_add_python_module(Topology
-                          TARGET_NAME       ${PROJECT_NAME}
-                          TARGET_ALIAS      Caribou::Python.Topology
-                          TARGET_DEPENDS    Caribou::Topology Caribou::Python.Config
-                          COMPONENT_NAME    Python
-                          PACKAGE_NAME      Caribou
-                          DESTINATION       Caribou/Topology
-                          SOURCE_FILES      ${SOURCE_FILES}
-                          PUBLIC_HEADERS    ${HEADER_FILES}
-                          HEADER_SRC_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/../../.."
-                          PYTHON_FILES      ${PYTHON_FILES}
-                          PYTHON_TEST_FILES ${PYTHON_TEST_FILES}
-                          )
-
+SP3_add_python_module(
+    TARGET       ${PROJECT_NAME}
+    TARGET_ALIAS Caribou::Python.Topology
+    PACKAGE      Caribou
+    MODULE       Topology
+    DESTINATION  Caribou/Topology
+    SOURCES      ${SOURCE_FILES}
+    HEADERS      ${HEADER_FILES}
+    DEPENDS      Caribou::Topology Caribou::Python.Config 
+)

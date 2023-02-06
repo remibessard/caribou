@@ -15,22 +15,15 @@ set(CARIBOU_VERSION_STR "\"${CARIBOU_VERSION}\"")
 string(REPLACE "." "" CARIBOU_VERSION_NUM ${CARIBOU_VERSION})
 string(REPLACE " " "" CARIBOU_VERSION_NUM ${CARIBOU_VERSION_NUM})
 
-# Add the target Config to the component of the same name. This will enable to do:
-# CMakeLists.txt
-#    find_package(Caribou COMPONENTS Config)
-#    add_library(my_cool_library SHARED)
-#    target_link_libraries(my_cool_library PRIVATE Caribou::Config)
-caribou_add_target_to_component (
-    TARGET_NAME    ${PROJECT_NAME}
+## Install rules for the library and headers; CMake package configurations files
+sofa_create_component_in_package_with_targets(
+    COMPONENT_VERSION ${CARIBOU_VERSION}
+    TARGETS ${PROJECT_NAME} AUTO_SET_TARGET_PROPERTIES
     COMPONENT_NAME ${PROJECT_NAME}
-    PACKAGE_NAME   Caribou
+    PACKAGE_NAME Caribou
     PUBLIC_HEADERS ${HEADER_FILES}
-    HEADER_BUILD_PREFIX  "${CMAKE_BINARY_DIR}/include/Caribou"
-    HEADER_INSTALL_PREFIX  "include/Caribou"
-)
-
-# This is required to be able to do "find_package(Caribou COMPONENTS Config)"
-caribou_add_component_to_package (
-    COMPONENT_NAME ${PROJECT_NAME}
-    PACKAGE_NAME   Caribou
+    INCLUDE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../"
+    INCLUDE_BUILD_DIR "${CMAKE_BINARY_DIR}/include/Caribou"
+    INCLUDE_INSTALL_DIR "Caribou"
+    RELOCATABLE "../../plugins"
 )
