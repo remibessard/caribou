@@ -18,16 +18,14 @@ if (NOT WIN32)
     target_link_libraries(${PROJECT_NAME} pthread)
 endif()
 
-list(APPEND target_rpath
-    "$ORIGIN/../lib"
-    "$ORIGIN/../../../lib"
-    "@executable_path/../lib"
-    "@executable_path/../../../lib"
-)
-
-set_target_properties(${PROJECT_NAME} PROPERTIES INSTALL_RPATH "${target_rpath}" )
+if(WIN32)
+    set(BIN_INSTALL_DIR "bin/$<CONFIG>")
+else()
+    set(BIN_INSTALL_DIR "bin")
+endif()
 
 install(
     TARGETS ${PROJECT_NAME}
     EXPORT Caribou
+    RUNTIME DESTINATION ${BIN_INSTALL_DIR}
 )

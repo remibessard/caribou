@@ -53,16 +53,6 @@ if (NOT WIN32)
     target_link_libraries(${PROJECT_NAME} PUBLIC pthread)
 endif()
 
-
-list(APPEND target_rpath
-    "$ORIGIN/../lib"
-    "$ORIGIN/../../../lib"
-    "@executable_path/../lib"
-    "@executable_path/../../../lib"
-)
-
-set_target_properties(${PROJECT_NAME} PROPERTIES INSTALL_RPATH "${target_rpath}" )
-
 target_link_libraries(${PROJECT_NAME} PUBLIC
                       $<$<AND:$<PLATFORM_ID:Linux>,$<VERSION_LESS:$<CXX_COMPILER_VERSION>,8.0>>:stdc++fs>
                       $<$<AND:$<PLATFORM_ID:Darwin>,$<VERSION_LESS:$<CXX_COMPILER_VERSION>,9.0>>:c++fs>)
@@ -70,14 +60,21 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC
                            $<$<AND:$<PLATFORM_ID:Linux>,$<VERSION_LESS:$<CXX_COMPILER_VERSION>,8.0>>:LEGACY_CXX>
                            $<$<AND:$<PLATFORM_ID:Darwin>,$<VERSION_LESS:$<CXX_COMPILER_VERSION>,9.0>>:LEGACY_CXX>)
 
+if(WIN32)
+    set(BIN_INSTALL_DIR "bin/$<CONFIG>")
+else()
+    set(BIN_INSTALL_DIR "bin")
+endif()
+
 foreach(file ${MESH_FILES})
     file(RELATIVE_PATH path_from_package "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/${file}")
     get_filename_component(dir_from_package ${path_from_package} DIRECTORY)
     configure_file("${file}" "${CMAKE_BINARY_DIR}/bin/${path_from_package}" COPYONLY)
-    install(FILES "${CMAKE_BINARY_DIR}/bin/${path_from_package}" DESTINATION "bin/${dir_from_package}")
+    install(FILES "${CMAKE_BINARY_DIR}/bin/${path_from_package}" DESTINATION "${BIN_INSTALL_DIR}/${dir_from_package}")
 endforeach()
 
 install(
     TARGETS ${PROJECT_NAME}
     EXPORT Caribou
+    RUNTIME DESTINATION ${BIN_INSTALL_DIR}
 )

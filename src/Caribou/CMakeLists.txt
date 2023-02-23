@@ -1,3 +1,5 @@
+include(../../cmake/caribouTools.cmake)
+
 add_subdirectory(Algebra)
 add_subdirectory(Config)
 add_subdirectory(Geometry)
@@ -8,4 +10,8 @@ if (CARIBOU_WITH_PYTHON_3)
     add_subdirectory(Python)
 endif()
 
-caribou_create_package(Caribou ${CARIBOU_VERSION})
+sofa_create_package(
+    PACKAGE_NAME Caribou
+    PACKAGE_VERSION ${CARIBOU_VERSION}
+    RELOCATABLE "plugins/"
+)

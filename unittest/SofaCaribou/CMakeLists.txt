@@ -15,8 +15,16 @@ set(SOURCE_FILES
 
 enable_testing()
 
-find_package(SOFA COMPONENTS SofaFramework Sofa.Simulation.Graph SofaBaseMechanics SofaBaseUtils SofaBaseLinearSolver SofaMiscForceField QUIET REQUIRED)
-find_package(Caribou COMPONENTS Topology REQUIRED)
+sofa_find_package(Sofa.Framework REQUIRED)
+sofa_find_package(Sofa.Simulation.Graph REQUIRED)
+sofa_find_package(Sofa.Component.Mass REQUIRED)
+sofa_find_package(Sofa.Component.Mapping.Linear REQUIRED)
+sofa_find_package(Sofa.Component.StateContainer REQUIRED)
+sofa_find_package(Sofa.Component.SceneUtility REQUIRED)
+sofa_find_package(Sofa.Component.LinearSolver REQUIRED)
+sofa_find_package(Sofa.Component.Mass REQUIRED)
+sofa_find_package(Sofa.Component.SolidMechanics.FEM.Elastic REQUIRED)
+
 find_package(Threads REQUIRED)
 
 if (CARIBOU_WITH_VTK)
@@ -31,45 +39,25 @@ endif()
 
 target_link_libraries(${PROJECT_NAME} PUBLIC gtest)
 target_link_libraries(${PROJECT_NAME} PUBLIC SofaCaribou)
-target_link_libraries(${PROJECT_NAME} PUBLIC SofaHelper SofaBaseMechanics SofaBaseUtils SofaBaseLinearSolver SofaMiscForceField)
+target_link_libraries(${PROJECT_NAME} PUBLIC SofaHelper SofaBaseMechanics SofaBaseUtils Sofa.Component.LinearSolver SofaMiscForceField)
 target_link_libraries(${PROJECT_NAME} PUBLIC
                       $<$<AND:$<PLATFORM_ID:Linux>,$<VERSION_LESS:$<CXX_COMPILER_VERSION>,8.0>>:stdc++fs>
                       $<$<AND:$<PLATFORM_ID:Darwin>,$<VERSION_LESS:$<CXX_COMPILER_VERSION>,9.0>>:c++fs>)
-if (${SofaFramework_VERSION} VERSION_LESS "22.06.99")
-    target_link_libraries(${PROJECT_NAME} PUBLIC SofaSimulationGraph)
-else()
-    target_link_libraries(${PROJECT_NAME} PUBLIC Sofa.Simulation.Graph)
-endif()
+target_link_libraries(${PROJECT_NAME} PUBLIC Sofa.Simulation.Graph)
 target_compile_definitions(${PROJECT_NAME} PUBLIC
                            $<$<AND:$<PLATFORM_ID:Linux>,$<VERSION_LESS:$<CXX_COMPILER_VERSION>,8.0>>:LEGACY_CXX>
                            $<$<AND:$<PLATFORM_ID:Darwin>,$<VERSION_LESS:$<CXX_COMPILER_VERSION>,9.0>>:LEGACY_CXX>)
 
-target_include_directories(${PROJECT_NAME} PUBLIC "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/>")
+target_link_libraries(${PROJECT_NAME} PUBLIC Sofa.Testing)
 
-if (SOFA_VERSION VERSION_GREATER_EQUAL "20.12.99")
-    target_link_libraries(${PROJECT_NAME} PUBLIC Sofa.Testing)
+if(WIN32)
+    set(BIN_INSTALL_DIR "bin/$<CONFIG>")
+else()
+    set(BIN_INSTALL_DIR "bin")
 endif()
 
-list(APPEND target_rpath
-    "$ORIGIN/../lib"
-    "$ORIGIN/../../../lib"
-    "@executable_path/../lib"
-    "@executable_path/../../../lib"
-    # SofaMiscForceField
-    "$ORIGIN/../../../plugins/SofaMiscForceField/lib"
-    "@executable_path/../../../plugins/SofaMiscForceField/lib"
-    # SofaMiscTopology
-    "$ORIGIN/../../../plugins/SofaMiscTopology/lib"
-    "@executable_path/../../../plugins/SofaMiscTopology/lib"
-    # SofaDeformable
-    "$ORIGIN/../../../plugins/SofaDeformable/lib"
-    "@executable_path/../../../plugins/SofaDeformable/lib"
-)
-
-set_target_properties(${PROJECT_NAME} PROPERTIES INSTALL_RPATH "${target_rpath}" )
-
 install(
-        TARGETS ${PROJECT_NAME}
-        EXPORT SofaCaribouTargets
-        RUNTIME DESTINATION "bin"
+    TARGETS ${PROJECT_NAME}
+    EXPORT SofaCaribouTargets
+    RUNTIME DESTINATION ${BIN_INSTALL_DIR}
 )

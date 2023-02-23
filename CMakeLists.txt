@@ -1,66 +1,26 @@
 cmake_minimum_required(VERSION 3.12)
 project(Caribou VERSION 21.06.00)
 
-# Policies
-cmake_policy(SET CMP0072 NEW)
-cmake_policy(SET CMP0074 NEW)
-cmake_policy(SET CMP0076 NEW)
-cmake_policy(SET CMP0094 NEW)
-
 set (CARIBOU_VERSION ${PROJECT_VERSION})
 
-## Default build type
-if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE "Release")
-endif()
+include(cmake/environment.cmake)
 
-## Change default install prefix
-if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-    set(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/install CACHE PATH "Install path prefix, prepended onto install directories." FORCE)
-endif()
-
-# Detect if Caribou is a subproject of SOFA
-if ("${CMAKE_PROJECT_NAME}" STREQUAL "Sofa")
-    set(CARIBOU_COMPILED_AS_SOFA_SUBPROJECT 1)
-    message(STATUS "${PROJECT_NAME} is compiled as a subproject to SOFA.")
-endif ()
-
-# If the plugin is compiled within SOFA, add an option to deactivate it, in which case the remaining
-# of this file won't run and therefore will not generate any error if the requirements (python, pybind11)
-# are not found.
-if (CARIBOU_COMPILED_AS_SOFA_SUBPROJECT)
-    option(PLUGIN_SOFACARIBOU "Build the caribou plugin." ON)
-    if (NOT PLUGIN_SOFACARIBOU)
-        return()
-    else()
-        message("Adding plugin caribou")
-    endif()
-endif()
+set(CARIBOU_SOURCE_DIR src/Caribou)
 
 # Include CMake specific tools
-list(INSERT CMAKE_MODULE_PATH 0 "${CMAKE_CURRENT_LIST_DIR}/cmake")
-list(INSERT CMAKE_PREFIX_PATH 0 "${CMAKE_BINARY_DIR}/cmake")
-include(CheckCXXCompilerFlag)
-include(CMakePackageConfigHelpers)
 include(CMakeDependentOption)
-include(caribouTools)
-set(CMAKE_REQUIRED_QUIET 1)
 
+include(CheckCXXCompilerFlag)
 CHECK_CXX_COMPILER_FLAG("-march=native" COMPILER_SUPPORTS_MARCH_NATIVE)
+CMAKE_DEPENDENT_OPTION(CARIBOU_OPTIMIZE_FOR_NATIVE "Build with -march=native to allow msse support" ON "COMPILER_SUPPORTS_MARCH_NATIVE" OFF)
 
 # OPTIONS
 option(CARIBOU_USE_FLOAT "Use float precision for floating point values." OFF)
-CMAKE_DEPENDENT_OPTION(CARIBOU_OPTIMIZE_FOR_NATIVE "Build with -march=native to allow msse support" ON "COMPILER_SUPPORTS_MARCH_NATIVE" OFF)
 
 # SOFA option
 find_package(Threads QUIET)
-find_package(SOFA COMPONENTS SofaFramework QUIET)
-CMAKE_DEPENDENT_OPTION(CARIBOU_WITH_SOFA "Compile the SofaCaribou library" ON "SOFA_FOUND" OFF)
-if (CARIBOU_WITH_SOFA)
-    list(APPEND CMAKE_PREFIX_PATH ${SOFA_MODULE_DIR})
-    list(REMOVE_DUPLICATES CMAKE_PREFIX_PATH)
-    find_package(SofaPython3 QUIET) # We need to do this first to setup the exact python version required
-endif()
+find_package(Sofa.Framework QUIET)
+CMAKE_DEPENDENT_OPTION(CARIBOU_WITH_SOFA "Compile the SofaCaribou library" ON "Sofa.Framework_FOUND" OFF)
 
 # Tests
 # SOFA is exporting its own gtest, let's try to find it first
@@ -93,15 +53,31 @@ else()
     message(STATUS "Caribou without benchmarks")
 endif()
 
-# Python 3 option
 if (CARIBOU_WITH_SOFA)
-    sofa_find_package(SofaPython3 QUIET)
+    list(APPEND CMAKE_PREFIX_PATH ${SOFA_MODULE_DIR})
+    list(REMOVE_DUPLICATES CMAKE_PREFIX_PATH)
+    get_filename_component(SOFA_ROOT_DIR "${SofaFramework_DIR}/../../.." ABSOLUTE)
+    message(STATUS
+            "Caribou with SOFA support\n"
+            "    SOFA version: ${Sofa_VERSION}"
+    )
 endif()
+
 set(CMAKE_CXX_STANDARD 17)
 set(PYBIND11_FINDPYTHON ON)
 set(PYBIND11_PYTHON_VERSION 3)
 set(Python_FIND_FRAMEWORK LAST)
-find_package(SofaPython3 QUIET)
+
+# SOFAPython3
+find_file(SofaPython3Tools NAMES "SofaPython3/lib/cmake/SofaPython3/SofaPython3Tools.cmake")
+if(SofaPython3Tools)
+    message("-- Found SofaPython3Tools. Python3 packages will be installed.")
+    include(${SofaPython3Tools})
+    set(SP3_PYTHON_PACKAGES_DIRECTORY "python3/site-packages")
+else()
+    # try again with the find_package mechanism
+    find_package(SofaPython3 QUIET)
+endif()
 if (SofaPython3_FOUND)
     set(PYTHON_EXECUTABLE ${PYTHON_EXECUTABLE})
     set(PYBIND11_PYTHON_VERSION ${PYTHON_VERSION})
@@ -117,29 +93,15 @@ if (CARIBOU_WITH_PYTHON_3)
     Libraries: ${Python_LIBRARIES}
     pybind11 version: ${pybind11_VERSION}
     pybind11 config: ${pybind11_CONFIG}"
-)
-endif()
-
-# SOFA Python 3
-if (CARIBOU_WITH_SOFA)
-    get_filename_component(SOFA_ROOT_DIR "${SofaFramework_DIR}/../../.." ABSOLUTE)
-    message(STATUS
-            "Caribou with SOFA support\n"
-            "    SOFA version: ${SofaFramework_VERSION}\n"
-            "    SOFA location: ${SOFA_ROOT_DIR}"
-            )
-    if (CARIBOU_WITH_PYTHON_3)
-        if (SofaPython3_FOUND)
-            get_filename_component(SP3_ROOT_DIR "${SofaPython3_DIR}/../../.." ABSOLUTE)
-            message(STATUS
-                    "Caribou with SofaPython3 support\n"
-                    "    SP3 version: ${SofaPython3_VERSION}\n"
-                    "    SP3 location: ${SP3_ROOT_DIR}"
-            )
-        else()
-            message(STATUS "Caribou without SofaPython (not found)")
-        endif()
-    endif ()
+    )
+    if (CARIBOU_WITH_SOFA)
+        get_filename_component(SP3_ROOT_DIR "${SofaPython3_DIR}/../../.." ABSOLUTE)
+        message(STATUS
+        "Caribou with SofaPython3 support\n"
+        "    SP3 version: ${SofaPython3_VERSION}\n"
+        "    SP3 location: ${SP3_ROOT_DIR}"
+        )
+    endif()
 endif()
 
 # OpenMP option
@@ -148,7 +110,7 @@ SET(CMAKE_FIND_LIBRARY_SUFFIXES .so)
 find_package(OpenMP QUIET)
 set(CMAKE_FIND_LIBRARY_SUFFIXES ${CMAKE_FIND_LIBRARY_SUFFIXES_BEFORE})
 CMAKE_DEPENDENT_OPTION(CARIBOU_WITH_OPENMP "Compile the plugin with OpenMP support" ON "OPENMP_FOUND" OFF)
-if (CARIBOU_WITH_OPENMP)
+if (CARIBOU_WITH_OPENMP AND NOT WIN32)
     message(STATUS "Caribou with OpenMP support\n\tLibraries: ${OpenMP_CXX_LIBRARIES}")
 endif()
 
@@ -197,9 +159,6 @@ if (CARIBOU_WITH_VTK)
     message(STATUS "${VTK_MSG}")
 endif()
 
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 # Compiler options
 set(CMAKE_CXX_STANDARD 17)
@@ -230,15 +189,15 @@ endif()
 install(
     FILES
         "${CMAKE_CURRENT_SOURCE_DIR}/cmake/caribouTools.cmake"
-    DESTINATION lib/cmake/Caribou
+    DESTINATION plugins/Caribou/lib/cmake/Caribou
     COMPONENT headers
 )
 
 install(
-        FILES
+    FILES
         "${CMAKE_CURRENT_SOURCE_DIR}/cmake/caribouTools.cmake"
-        "${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindSOFA.cmake"
-        "${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindMKL.cmake"
-        DESTINATION lib/cmake/SofaCaribou
-        COMPONENT headers
+        "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/FindSOFA.cmake"
+        "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/FindMKL.cmake"
+    DESTINATION plugins/SofaCaribou/lib/cmake/SofaCaribou
+    COMPONENT headers
 )
