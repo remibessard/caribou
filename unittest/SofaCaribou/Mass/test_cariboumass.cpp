@@ -8,12 +8,12 @@ DISABLE_ALL_WARNINGS_BEGIN
 #include <sofa/testing/BaseTest.h>
 #endif
 #include <sofa/simulation/Node.h>
-#include <SofaBaseLinearSolver/DefaultMultiMatrixAccessor.h>
-#include <SofaBaseMechanics/MechanicalObject.h>
-#include <SofaSimulationGraph/DAGSimulation.h>
-#include <SofaSimulationGraph/SimpleApi.h>
+#include <sofa/core/behavior/DefaultMultiMatrixAccessor.h>
+#include <sofa/component/statecontainer/MechanicalObject.h>
+#include <sofa/simulation/graph/DAGSimulation.h>
+#include <sofa/simulation/graph/SimpleApi.h>
 #include <sofa/helper/system/PluginManager.h>
-#include <SofaMiscForceField/MeshMatrixMass.inl>
+#include <sofa/component/mass/MeshMatrixMass.inl>
 DISABLE_ALL_WARNINGS_END
 
 #include <SofaCaribou/Mass/CaribouMass[Tetrahedron].h>
@@ -53,7 +53,7 @@ TEST(CaribouMass, LinearTetrahedron) {
 
     createObject(root, "RegularGridTopology", {{"name", "grid"}, {"min", "-7.5 -7.5 0"}, {"max", "7.5 7.5 80"}, {"n", "3 3 9"}});
 
-    auto mo = dynamic_cast<sofa::component::container::MechanicalObject<sofa::defaulttype::Vec3Types> *>(
+    auto mo = dynamic_cast<sofa::component::statecontainer::MechanicalObject<sofa::defaulttype::Vec3Types> *>(
         createObject(root, "MechanicalObject", {{"name", "mo"}, {"src", "@grid"}}).get()
     );
     createObject(root, "TetrahedronSetTopologyContainer", {{"name", "topology"}});
@@ -88,7 +88,7 @@ TEST(CaribouMass, LinearTetrahedron) {
 
     // Get M from caribou using SOFA API
     SofaCaribou::Algebra::EigenMatrix<Eigen::SparseMatrix<double>> M2;
-    sofa::component::linearsolver::DefaultMultiMatrixAccessor accessor;
+    sofa::core::behavior::DefaultMultiMatrixAccessor accessor;
     M2.resize((signed) mo->getSize()*3, (signed) mo->getSize()*3);
     accessor.setGlobalMatrix(&M2);
     accessor.addMechanicalState(mo);
@@ -181,7 +181,7 @@ TEST(CaribouMass, LinearHexahedron) {
 
     createObject(root, "RegularGridTopology", {{"name", "grid"}, {"min", "-7.5 -7.5 0"}, {"max", "7.5 7.5 80"}, {"n", "3 3 9"}});
 
-    auto mo = dynamic_cast<sofa::component::container::MechanicalObject<sofa::defaulttype::Vec3Types> *>(
+    auto mo = dynamic_cast<sofa::component::statecontainer::MechanicalObject<sofa::defaulttype::Vec3Types> *>(
             createObject(root, "MechanicalObject", {{"name", "mo"}, {"src", "@grid"}}).get()
     );
     createObject(root, "HexahedronSetTopologyContainer", {{"name", "topology"}, {"src", "@grid"}});
@@ -207,7 +207,7 @@ TEST(CaribouMass, LinearHexahedron) {
 
     // Get M from SOFA
     SofaCaribou::Algebra::EigenMatrix<Eigen::SparseMatrix<double>> SofaM;
-    sofa::component::linearsolver::DefaultMultiMatrixAccessor accessor;
+    sofa::core::behavior::DefaultMultiMatrixAccessor accessor;
     SofaM.resize((signed) mo->getSize()*3, (signed) mo->getSize()*3);
     accessor.setGlobalMatrix(&SofaM);
     accessor.addMechanicalState(mo);

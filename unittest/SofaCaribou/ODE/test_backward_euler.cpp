@@ -11,9 +11,9 @@ DISABLE_ALL_WARNINGS_BEGIN
 #include <sofa/testing/BaseTest.h>
 #endif
 #include <sofa/simulation/Node.h>
-#include <SofaSimulationGraph/DAGSimulation.h>
-#include <SofaSimulationGraph/SimpleApi.h>
-#include <SofaBaseMechanics/MechanicalObject.h>
+#include <sofa/simulation/graph/DAGSimulation.h>
+#include <sofa/simulation/graph/SimpleApi.h>
+#include <sofa/component/statecontainer/MechanicalObject.h>
 DISABLE_ALL_WARNINGS_END
 
 using namespace sofa::simulation;
@@ -69,7 +69,7 @@ TEST(BackwardEulerODESolver, Beam) {
     );
     SOFA_UNUSED(solver);
     createObject(meca, "LLTSolver", {{"Backend", "Pardiso"}});
-    auto mo = dynamic_cast<sofa::component::container::MechanicalObject<sofa::defaulttype::Vec3Types> *>(
+    auto mo = dynamic_cast<sofa::component::statecontainer::MechanicalObject<sofa::defaulttype::Vec3Types> *>(
             createObject(meca, "MechanicalObject", {{"name", "mo"}, {"src", "@../grid"}}).get()
     );
 
